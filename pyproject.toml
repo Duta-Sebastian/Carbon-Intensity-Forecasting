@@ -1,0 +1,23 @@
+[project]
+name = "carbon-intensity-forecasting"
+authors = [
+    {name = "Duta Andrei-Sebastian", email = "sebiduta2004@gmail.com"}
+]
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "entsoe-py>=0.7.11",
+    "pydantic-settings>=2.13.1",
+    "sqlalchemy[asyncio]>=2.0.48",
+    "sqlalchemy-timescaledb>=0.4.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

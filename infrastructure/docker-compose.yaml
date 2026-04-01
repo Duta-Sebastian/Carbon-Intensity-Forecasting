@@ -1,0 +1,29 @@
+services:
+  database:
+    image: timescale/timescaledb:2.26.0-pg18
+    container_name: timescaledb
+    environment:
+      - POSTGRES_USER=sebastian
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=carbon_intensity_forecasting
+    ports:
+      - 5432:5432
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@local.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - 5050:80
+    depends_on:
+      - database
+    restart: unless-stopped
+
+volumes:
+  timescaledb_data:
+  
