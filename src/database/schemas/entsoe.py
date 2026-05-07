@@ -1,17 +1,22 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from core.types import CountryCode, EnergySource
+from core.types import CountryCode, EnergyDataProvider, EnergySource
 
 
 class EntsoeBaseSchema(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
 
     timestamp: datetime = Field(..., description="UTC timestamp of the measurement")
     country_code: CountryCode = Field(
         ..., description="Country code for the measurement"
     )
+
+    @computed_field
+    @property
+    def provider(self) -> EnergyDataProvider:
+        return EnergyDataProvider.ENTSOE
 
 
 class EnergyGenerationSchema(EntsoeBaseSchema):

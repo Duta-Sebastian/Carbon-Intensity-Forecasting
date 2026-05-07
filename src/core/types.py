@@ -13,6 +13,13 @@ class MetricType(str, Enum):
     LOAD = "load"
 
 
+class EnergyDataProvider(str, Enum):
+    """Data provider for the energy data."""
+
+    ENTSOE = "entsoe"
+    TRANSELECTRICA = "transelectrica"
+
+
 class EnergySource(str, Enum):
     """Generation Sources"""
 
@@ -41,3 +48,10 @@ class EnergySource(str, Enum):
     HYDRO_PUMPED_STORAGE = "hydro_pumped_storage"
     WASTE = "waste"
     OTHER = "other"
+
+
+class WeatherAreas(dict[str, float], Enum):
+    BUCHAREST = {
+        "latitude": 44.4323,
+        "longitude": 26.1063,
+    }

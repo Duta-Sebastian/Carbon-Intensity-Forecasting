@@ -1,36 +1,38 @@
 import asyncio
-import json
 from datetime import datetime, timedelta, timezone
 
-import pandas as pd
-
-from adapters.entsoe_adapter import EntsoeAdapter
-from clients.entsoe_client import EntsoeManager
-from core.config.entsoe_settings import EntsoeSettings
-from core.types import CountryCode, MetricType
-from gateways.entsoe_gateway import EntsoeGateway
+from core.config import AppSettings
+from data_pipeline.entsoe import (
+    EntsoeGateway,
+    EntsoeManager,
+)
+from database.manager import DatabaseManager
 
 
 async def main():
-    now = datetime.now(timezone.utc)
-    start_dt = (now - timedelta(days=1)).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    end_dt = start_dt + timedelta(hours=23, minutes=59)
-    yesterday_start = pd.Timestamp(start_dt)
-    yesterday_end = pd.Timestamp(end_dt)
-
-    entsoe_settings = EntsoeSettings.model_validate({})
-    entsoe_gw = EntsoeGateway().initialize(entsoe_settings)
+    app_settings = AppSettings()
+    entsoe_gw = EntsoeGateway().initialize(app_settings.entsoe)
     entsoe_manager = EntsoeManager(entsoe_gw)
-    entsoe_adapter = EntsoeAdapter()
-    df = await entsoe_manager.query_generation(
-        CountryCode.ROMANIA, yesterday_start, yesterday_end
-    )
-    print(df)
-    results = entsoe_adapter.transform(df, CountryCode.ROMANIA, MetricType.GENERATION)
-    with open("test.out", "w") as f:
-        json.dump([result.model_dump_json() for result in results], f, indent=4)
+
+    timescale_database = DatabaseManager(app_settings.db)
+    timescale_database.initialize()
+
+    start_date = datetime.now(timezone.utc) - timedelta(365)
+    # print(start_date)
+    # for _ in range(0, 1095):
+    #     start_date = (start_date - timedelta(days=1)).replace(
+    #         hour=0, minute=0, second=0, microsecond=0
+    #     )
+    #     end_date = start_date + timedelta(
+    #         hours=23, minutes=59, seconds=59, microseconds=999, milliseconds=999
+    #     )
+    #     async for session in timescale_database.get_session():
+    #         entsoe_service = EntsoeService(entsoe_manager, session)
+    #         await entsoe_service.sync_generation_data(
+    #             country_code=CountryCode.ROMANIA,
+    #             start=start_date,
+    #             end=end_date,
+    #         )
 
 
 if __name__ == "__main__":

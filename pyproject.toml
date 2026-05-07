@@ -14,6 +14,7 @@ dependencies = [
     "pydantic-settings>=2.13.1",
     "sqlalchemy[asyncio]>=2.0.48",
     "sqlalchemy-timescaledb>=0.4.1",
+    "openpyxl>=3.1.5",
 ]
 
 [tool.setuptools.packages.find]
@@ -21,3 +22,6 @@ where = ["src"]
 
 [tool.setuptools.package-dir]
 "" = "src"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/core", "src/database", "src/data_pipeline"]
