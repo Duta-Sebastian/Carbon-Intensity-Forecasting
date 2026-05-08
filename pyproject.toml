@@ -15,6 +15,10 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.48",
     "sqlalchemy-timescaledb>=0.4.1",
     "openpyxl>=3.1.5",
+    "matplotlib>=3.10.9",
+    "statsmodels>=0.14.6",
+    "mlflow>=3.12.0",
+    "geopy>=2.4.1",
 ]
 
 [tool.setuptools.packages.find]

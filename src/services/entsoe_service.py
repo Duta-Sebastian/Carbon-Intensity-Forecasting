@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +7,7 @@ from core.types import CountryCode, MetricType
 from data_pipeline.entsoe.adapter import EntsoeAdapter
 from data_pipeline.entsoe.manager import EntsoeManager
 from data_pipeline.entsoe.repository import EntsoeRepository
-from database.schemas.entsoe import EnergyGenerationSchema
+from database.schemas.entsoe import EnergyGenerationSchema, EnergyLoadSchema
 
 
 class EntsoeService:
@@ -19,7 +18,7 @@ class EntsoeService:
 
     async def sync_generation_data(
         self, country_code: CountryCode, start: datetime, end: datetime
-    ) -> Optional[list[EnergyGenerationSchema]]:
+    ) -> list[EnergyGenerationSchema] | None:
         """
         Orchestrates fetching, transforming, and persisting ENTSO-E generation data.
         """
@@ -38,5 +37,29 @@ class EntsoeService:
         )
 
         await self.repository.insert_generation(schemas)
+
+        return schemas
+
+    async def sync_load_data(
+        self, country_code: CountryCode, start: datetime, end: datetime
+    ) -> list[EnergyLoadSchema] | None:
+        """
+        Orchestrates fetching, transforming, and persisting ENTSO-E generation data.
+        """
+        ts_start: pd.Timestamp = pd.Timestamp(start)
+        ts_end: pd.Timestamp = pd.Timestamp(end)
+
+        df: pd.DataFrame = await self.manager.query_load(
+            country_code=country_code, start=ts_start, end=ts_end
+        )
+
+        if df.empty:
+            return None
+
+        schemas: list[EnergyLoadSchema] = self.adapter.transform(
+            df=df, country_code=country_code, metric_type=MetricType.LOAD
+        )
+
+        await self.repository.insert_load(schemas)
 
         return schemas

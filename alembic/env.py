@@ -4,9 +4,9 @@ from logging.config import fileConfig
 from sqlalchemy.engine import Connection
 
 from alembic import context
-from src.database.config import TimescaleDatabaseSettings
-from src.database.manager import DatabaseManager
-from src.database.models import Base, EnergyGeneration  # noqa: F401
+from database.config import TimescaleDatabaseSettings
+from database.manager import DatabaseManager
+from database.models import Base, EnergyGeneration, EnergyLoad  # noqa: F401
 
 settings = TimescaleDatabaseSettings()
 db_manager = DatabaseManager(settings=settings)
