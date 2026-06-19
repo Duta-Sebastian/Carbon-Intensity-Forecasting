@@ -46,11 +46,9 @@ class WindForecastingService:
         df.set_index(pd.to_datetime(df["ts"]), inplace=True)
         series = df["val"].asfreq("15min").ffill()
 
-        # split_idx = int(len(series) * 0.8)
         train = series.iloc[:-96]
         test = series.iloc[-96:]
 
-        # Extract precise start and end times for dataset transparency
         train_start, train_end = train.index.min(), train.index.max()
         test_start, test_end = test.index.min(), test.index.max()
 
@@ -59,7 +57,6 @@ class WindForecastingService:
         )
 
         with self.tracker.start_run(run_name=run_name):
-            # 1. Add an overarching Markdown note to the MLflow run
             run_note = (
                 f"### Wind Generation Forecasting: {country_code.value}\n"
                 f"**Model Type**: {model.model_name}\n\n"
@@ -76,7 +73,6 @@ class WindForecastingService:
                 pd.DataFrame(test), f"{country_code.value}_test", context="testing"
             )
 
-            # 2. Log exact boundaries to parameters for easy querying
             self.tracker.log_params(
                 {
                     "model_type": model.model_name,

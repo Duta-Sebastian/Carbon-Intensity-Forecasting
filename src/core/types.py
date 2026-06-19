@@ -20,6 +20,12 @@ class EnergyDataProvider(str, Enum):
     TRANSELECTRICA = "transelectrica"
 
 
+class WeatherDataProvider(str, Enum):
+    """Data provider for weather data"""
+
+    OPENMETEO = "openmeteo"
+
+
 class EnergySource(str, Enum):
     """Generation Sources"""
 
@@ -50,8 +56,40 @@ class EnergySource(str, Enum):
     OTHER = "other"
 
 
-class WeatherAreas(dict[str, float], Enum):
-    BUCHAREST = {
-        "latitude": 44.4323,
-        "longitude": 26.1063,
-    }
+class RomanianCity(Enum):
+    BUCHAREST = ("Bucharest", 44.4268, 26.1025)
+    CLUJ_NAPOCA = ("Cluj-Napoca", 46.7712, 23.6236)
+    TIMISOARA = ("Timișoara", 45.7489, 21.2087)
+    IASI = ("Iași", 47.1585, 27.6014)
+    CONSTANTA = ("Constanța", 44.1598, 28.6348)
+    BRASOV = ("Brașov", 45.6427, 25.5887)
+    GALATI = ("Galați", 45.4353, 28.0075)
+    PLOIESTI = ("Ploiești", 44.9407, 26.0296)
+    ORADEA = ("Oradea", 47.0465, 21.9189)
+    BACAU = ("Bacău", 46.5673, 26.9136)
+
+    @property
+    def city(self):
+        return self.value[0]
+
+    @property
+    def lat(self):
+        return self.value[1]
+
+    @property
+    def lon(self):
+        return self.value[2]
+
+
+CITY_POPULATION_MAP: dict[RomanianCity, int] = {
+    RomanianCity.BUCHAREST: 1716961,
+    RomanianCity.CLUJ_NAPOCA: 286598,
+    RomanianCity.TIMISOARA: 250849,
+    RomanianCity.IASI: 271692,
+    RomanianCity.CONSTANTA: 263688,
+    RomanianCity.BRASOV: 237589,
+    RomanianCity.GALATI: 217851,
+    RomanianCity.PLOIESTI: 180540,
+    RomanianCity.ORADEA: 183105,
+    RomanianCity.BACAU: 136087,
+}

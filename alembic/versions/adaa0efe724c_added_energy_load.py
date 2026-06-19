@@ -28,7 +28,6 @@ def upgrade() -> None:
         sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False),
         sa.Column(
             "country_code",
-            # 2. USE THE POSTGRES ENUM, NOT sa.Enum
             ENUM(
                 "ROMANIA",
                 "HUNGARY",
@@ -39,7 +38,6 @@ def upgrade() -> None:
         ),
         sa.Column(
             "provider",
-            # 2. USE THE POSTGRES ENUM, NOT sa.Enum
             ENUM(
                 "ENTSOE",
                 "TRANSELECTRICA",

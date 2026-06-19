@@ -6,7 +6,12 @@ from sqlalchemy.engine import Connection
 from alembic import context
 from database.config import TimescaleDatabaseSettings
 from database.manager import DatabaseManager
-from database.models import Base, EnergyGeneration, EnergyLoad  # noqa: F401
+from database.models import (  # noqa: F401
+    Base,
+    EnergyGeneration,
+    EnergyLoad,
+    WeatherData,
+)
 
 settings = TimescaleDatabaseSettings()
 db_manager = DatabaseManager(settings=settings)

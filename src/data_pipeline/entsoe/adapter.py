@@ -1,5 +1,6 @@
 from typing import Any, Literal, cast, overload
 
+import numpy as np
 import pandas as pd
 
 from core.types import EnergySource, MetricType
@@ -92,8 +93,59 @@ class EntsoeAdapter:
         self, df: pd.DataFrame, country_code: str
     ) -> list[dict[str, Any]]:
         df = self._prepare_index(df)
-        clean_df = df[["Actual Load"]].dropna().reset_index()
+
+        expected_range = pd.date_range(
+            start=df.index.min(), end=df.index.max(), freq="15min", name="timestamp"
+        )
+        df = df.reindex(expected_range)
+
+        missing_mask = df["Actual Load"].isna()
+        is_0_mask = df["Actual Load"] == 0
+        flatline_mask = df["Actual Load"].diff() == 0
+        rolling_median = (
+            df["Actual Load"].rolling(window=5, center=True, min_periods=1).median()
+        )
+        sudden_change_mask = (
+            abs(df["Actual Load"] - rolling_median) / rolling_median
+        ) > 0.075
+
+        pass1_mask = missing_mask | is_0_mask | flatline_mask | sudden_change_mask
+
+        if pass1_mask.any():
+            print(
+                f"\n--- Pass 1: Interpolating {pass1_mask.sum()} raw anomalies for {country_code} ---"
+            )
+            df.loc[pass1_mask, "Actual Load"] = np.nan
+            df["Actual Load"] = self._fill_missing_intervals(df["Actual Load"])
+
+            for ts in df[pass1_mask].index:
+                val = df.loc[ts, "Actual Load"]
+                print(f"[Pass 1] Timestamp: {ts} | Interpolated: {val:.2f} MW")
+
+        pass2_mask = df["Actual Load"].diff() == 0
+
+        if pass2_mask.any():
+            print(f"\n--- Pass 2: Smoothing {pass2_mask.sum()} secondary artifacts ---")
+
+            pre_smooth_values = df.loc[pass2_mask, "Actual Load"].copy()
+
+            df.loc[pass2_mask, "Actual Load"] = np.nan
+            df["Actual Load"] = self._fill_missing_intervals(df["Actual Load"])
+
+            for ts in pass2_mask[pass2_mask].index:
+                old_val = pre_smooth_values.loc[ts]
+                new_val = df.loc[ts, "Actual Load"]
+                print(
+                    f"[Pass 2] Timestamp: {ts} | Smoothed: {old_val:.2f} -> {new_val:.2f} MW"
+                )
+
+        clean_df = df.reset_index()
         clean_df.columns = pd.Index(["timestamp", "load_mw"])
+        clean_df = clean_df.dropna(subset=["load_mw"])
+
+        self._validate_15_min_intervals(clean_df)
+
+        clean_df["timestamp"] = clean_df["timestamp"].tolist()
         clean_df["country_code"] = country_code
 
         return cast(list[dict[str, Any]], clean_df.to_dict(orient="records"))
@@ -106,3 +158,27 @@ class EntsoeAdapter:
         else:
             df.index = df.index.tz_convert("UTC")
         return df
+
+    def _fill_missing_intervals(self, series: pd.Series) -> pd.Series:
+        """
+        Applies the business logic for missing data:
+        - Linear Interpolation for internal gaps
+        - Forward Fill as a fallback for gaps at the edge of a batch.
+        """
+        return series.interpolate(method="pchip").ffill().bfill()
+
+    def _validate_15_min_intervals(self, df: pd.DataFrame) -> None:
+        """Checks if the timestamp sequence is strictly 15-minute intervals."""
+        if len(df) < 2:
+            return
+
+        ts = df["timestamp"] if "timestamp" in df.columns else df.index.to_series()
+
+        diffs = ts.diff().dropna()
+        expected = pd.Timedelta(minutes=15)
+
+        if not (diffs == expected).all():
+            bad_indices = diffs[diffs != expected].index
+            raise ValueError(
+                f"Irregular time intervals detected at: {bad_indices.tolist()}"
+            )

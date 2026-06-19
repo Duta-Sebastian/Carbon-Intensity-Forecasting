@@ -12,4 +12,7 @@ wheels/
 .vscode
 .env
 
+pipeline_output/
+pipeline_output_xgboost/
+
 __pycache__/
