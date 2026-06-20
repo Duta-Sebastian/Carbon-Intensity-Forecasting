@@ -33,6 +33,7 @@ dependencies = [
     "torchaudio>=2.11.0",
     "xgboost>=3.2.0",
     "optuna>=4.9.0",
+    "zstandard>=0.25.0",
 ]
 
 [tool.setuptools.packages.find]
